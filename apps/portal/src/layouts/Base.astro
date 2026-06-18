@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import { Preloader } from '../components/Preloader';
+import { Navbar } from '../components/Navbar';
 
 interface Props {
   title: string;
@@ -20,13 +22,6 @@ const {
 const year = new Date().getFullYear();
 const site = Astro.site ?? new URL('https://portal.aiedutalk.online');
 const canonical = new URL(path, site).href;
-const currentPath = Astro.url.pathname;
-
-const navLinks = [
-  { label: '首页',     href: '/' },
-  { label: '全部作品', href: '/works' },
-  { label: '关于',     href: '/about' },
-];
 ---
 
 <!doctype html>
@@ -52,51 +47,16 @@ const navLinks = [
 
     <title>{title}</title>
   </head>
-  <body class="min-h-full bg-neutral-950 text-white">
+  <body class="min-h-full bg-neutral-950 text-white selection:bg-white/20">
 
-    <header class="border-b border-white/5 sticky top-0 z-50 bg-neutral-950/80 backdrop-blur-md">
-      <nav class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <a href="/" class="font-bold tracking-tighter text-lg select-none">
-          DEV<span class="text-white/25">.</span>PORTAL
-        </a>
-        <div class="flex items-center gap-1">
-          {navLinks.map(({ label, href }) => {
-            const active = href === '/' ? currentPath === '/' : currentPath.startsWith(href);
-            return (
-              <a
-                href={href}
-                class={`px-3 py-1.5 rounded text-sm transition-colors ${
-                  active
-                    ? 'text-white bg-white/8'
-                    : 'text-neutral-500 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {label}
-              </a>
-            );
-          })}
-          <a
-            href="/rss.xml"
-            class="ml-2 p-1.5 text-neutral-700 hover:text-neutral-400 transition-colors rounded"
-            title="RSS 订阅"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5">
-              <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20C4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/>
-            </svg>
-          </a>
-        </div>
-      </nav>
-    </header>
+    <!-- Preloader overlay (React island, client-side only) -->
+    <Preloader client:load />
 
-    <main class="mx-auto max-w-5xl px-6 py-12">
-      <slot />
-    </main>
+    <!-- Fixed navbar (React island with scroll + mobile state) -->
+    <Navbar client:load />
 
-    <footer class="border-t border-white/5 py-10 text-center">
-      <p class="text-xs text-neutral-700 font-mono">
-        &copy; {year} DEV.PORTAL &mdash; 小程序与全栈应用展示
-      </p>
-    </footer>
+    <!-- Page content -->
+    <slot />
 
   </body>
 </html>
