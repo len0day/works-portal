@@ -1,0 +1,197 @@
+---
+import Base from '../../layouts/Base.astro';
+import projectsData from '../../data/projects.json';
+import featuresData from '../../data/features.json';
+import highlightsData from '../../data/highlights.json';
+import releasesData from '../../data/releases.json';
+import type { Project, Feature, Highlight, Release } from '../../lib/types';
+import { renderMarkdown, formatDate } from '../../lib/md';
+
+const featureList = featuresData as Feature[];
+const highlightList = highlightsData as Highlight[];
+const releaseList = releasesData as Release[];
+
+// getStaticPaths 在 Astro 独立作用域执行，projects 须在函数内读取。
+export async function getStaticPaths() {
+  const projectList = projectsData as Project[];
+  return projectList.map((p) => ({
+    params: { slug: p.slug },
+    props: { project: p },
+  }));
+}
+
+interface Props {
+  project: Project;
+}
+const { project } = Astro.props;
+
+const descHtml = renderMarkdown(project.description);
+const stack = project.tech_stack ?? [];
+const projFeatures = featureList
+  .filter((f) => f.project_id === project.id)
+  .sort((a, b) => a.sort_order - b.sort_order);
+const projHighlights = highlightList
+  .filter((h) => h.project_id === project.id)
+  .sort((a, b) => a.sort_order - b.sort_order);
+const projReleases = releaseList
+  .filter((r) => r.project_id === project.id)
+  .sort((a, b) => {
+    const da = a.date ? new Date(a.date).getTime() : 0;
+    const db = b.date ? new Date(b.date).getTime() : 0;
+    return db - da;
+  });
+
+// 按 category 分组亮点
+const highlightGroups = projHighlights.reduce<Record<string, Highlight[]>>((acc, h) => {
+  const key = h.category || '其他';
+  (acc[key] ??= []).push(h);
+  return acc;
+}, {});
+
+const categoryLabels: Record<string, string> = {
+  performance: '性能',
+  architecture: '架构',
+  i18n: '国际化',
+  ai: 'AI',
+  feature: '功能',
+  fix: '修复',
+  其他: '其他',
+};
+
+const links = [
+  project.repo_url && { label: '代码仓库', href: project.repo_url },
+  project.homepage_url && { label: '在线访问', href: project.homepage_url },
+].filter(Boolean) as { label: string; href: string }[];
+---
+
+<Base
+  title={`${project.display_name} · 作品门户`}
+  description={project.tagline ?? `${project.display_name} 介绍、技术亮点与版本更新`}
+  path={`/projects/${project.slug}`}
+  type="article"
+>
+  <a href="/" class="text-sm text-muted-foreground hover:text-foreground">← 返回作品列表</a>
+
+  <header class="mt-4 border-b pb-6">
+    <div class="flex flex-wrap items-baseline gap-3">
+      <h1 class="text-3xl font-bold tracking-tight">{project.display_name}</h1>
+      {project.current_version && (
+        <span class="rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+          当前版本 v{project.current_version}
+        </span>
+      )}
+    </div>
+    {project.display_name_en && (
+      <p class="mt-1 text-sm text-muted-foreground">{project.display_name_en}</p>
+    )}
+    {project.tagline && <p class="mt-3 text-lg text-foreground/80">{project.tagline}</p>}
+    {stack.length > 0 && (
+      <div class="mt-4 flex flex-wrap gap-1.5">
+        {stack.map((t) => (
+          <span class="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">{t}</span>
+        ))}
+      </div>
+    )}
+    {links.length > 0 && (
+      <div class="mt-4 flex gap-3 text-sm">
+        {links.map((l) => (
+          <a
+            href={l.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="font-medium text-primary hover:underline"
+          >
+            {l.label} ↗
+          </a>
+        ))}
+      </div>
+    )}
+  </header>
+
+  {descHtml && (
+    <section class="prose prose-sm mt-8 max-w-none">
+      <h2>项目介绍</h2>
+      <div set:html={descHtml} />
+    </section>
+  )}
+
+  {projFeatures.length > 0 && (
+    <section class="mt-10">
+      <h2 class="text-xl font-semibold">功能特性</h2>
+      <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+        {projFeatures.map((f) => (
+          <li class="rounded-lg border p-4">
+            <div class="flex items-baseline justify-between gap-2">
+              <h3 class="font-medium">{f.icon && <span class="mr-1">{f.icon}</span>}{f.title}</h3>
+            </div>
+            {f.summary && <p class="mt-1 text-sm text-muted-foreground">{f.summary}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  {projHighlights.length > 0 && (
+    <section class="mt-10">
+      <h2 class="text-xl font-semibold">技术亮点</h2>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Object.entries(highlightGroups).map(([cat, items]) => (
+          <div class="rounded-lg border p-4">
+            <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {categoryLabels[cat] ?? cat}
+            </h3>
+            <ul class="space-y-3">
+              {items.map((h) => (
+                <li>
+                  <div class="font-medium">{h.title}</div>
+                  {h.metric_value && (
+                    <div class="mt-1 text-2xl font-bold text-primary">
+                      {h.metric_value}
+                      {h.metric_label && (
+                        <span class="ml-1 text-xs font-normal text-muted-foreground">{h.metric_label}</span>
+                      )}
+                    </div>
+                  )}
+                  {h.body && (
+                    <p class="mt-1 text-sm text-muted-foreground">{h.body}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {projReleases.length > 0 && (
+    <section class="mt-10">
+      <h2 class="text-xl font-semibold">版本时间线</h2>
+      <p class="mt-1 text-sm text-muted-foreground">
+        共 {projReleases.length} 个版本 ·
+        <a href={`/rss.xml`} class="ml-1 text-primary hover:underline">RSS 订阅</a>
+      </p>
+      <ul class="mt-4 space-y-2">
+        {projReleases.map((r) => (
+          <li>
+            <details class="group rounded-lg border p-3">
+              <summary class="flex cursor-pointer items-center justify-between gap-3 marker:content-['']">
+                <div class="flex items-baseline gap-2">
+                  <span class="font-mono text-sm font-semibold">{r.version}</span>
+                  {r.is_major && (
+                    <span class="rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">MAJOR</span>
+                  )}
+                  {r.title && <span class="text-sm">{r.title}</span>}
+                </div>
+                <span class="text-xs text-muted-foreground">{formatDate(r.date)}</span>
+              </summary>
+              {r.body && (
+                <div class="prose prose-sm mt-2 max-w-none" set:html={renderMarkdown(r.body)} />
+              )}
+            </details>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>

@@ -1,0 +1,75 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import projectsData from '../../../../data/projects.json';
+import releasesData from '../../../../data/releases.json';
+import type { Project, Release } from '../../../../lib/types';
+import { renderMarkdown, formatDate } from '../../../../lib/md';
+
+// version 可能含特殊字符（如 dev-2026-06-11-1），需 URL-safe 编码。
+// getStaticPaths 在 Astro 中独立作用域执行，数据须在函数内部读取。
+export async function getStaticPaths() {
+  const projectList = projectsData as Project[];
+  const releaseList = releasesData as Release[];
+  const paths: any[] = [];
+  for (const p of projectList) {
+    const rs = releaseList
+      .filter((r) => r.project_id === p.id)
+      .sort((a, b) => {
+        const da = a.date ? new Date(a.date).getTime() : 0;
+        const db = b.date ? new Date(b.date).getTime() : 0;
+        return db - da;
+      });
+    for (const r of rs) {
+      paths.push({
+        params: { slug: p.slug, version: encodeURIComponent(r.version) },
+        props: { project: p, release: r, total: rs.length, index: rs.findIndex((x) => x.id === r.id) },
+      });
+    }
+  }
+  return paths;
+}
+
+interface Props {
+  project: Project;
+  release: Release;
+  total: number;
+  index: number;
+}
+const { project, release, total, index } = Astro.props;
+const bodyHtml = renderMarkdown(release.body);
+---
+
+<Base
+  title={`${project.display_name} ${release.version} · 作品门户`}
+  description={release.title ?? `${project.display_name} 版本 ${release.version} 更新日志`}
+  path={`/projects/${project.slug}/releases/${encodeURIComponent(release.version)}`}
+  type="article"
+>
+  <a href={`/projects/${project.slug}`} class="text-sm text-muted-foreground hover:text-foreground">
+    ← 返回 {project.display_name}
+  </a>
+
+  <article class="mt-4">
+    <div class="flex flex-wrap items-baseline gap-3 border-b pb-4">
+      <h1 class="font-mono text-2xl font-bold">{release.version}</h1>
+      {release.is_major && (
+        <span class="rounded bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">MAJOR</span>
+      )}
+      {release.date && (
+        <span class="text-sm text-muted-foreground">{formatDate(release.date)}</span>
+      )}
+    </div>
+    {release.title && <p class="mt-3 text-lg text-foreground/80">{release.title}</p>}
+
+    {bodyHtml ? (
+      <div class="prose prose-sm mt-6 max-w-none" set:html={bodyHtml} />
+    ) : (
+      <p class="mt-6 text-sm text-muted-foreground">本版本无更新说明。</p>
+    )}
+
+    <footer class="mt-10 border-t pt-4 text-sm text-muted-foreground">
+      {project.display_name} · 第 {index + 1} / {total} 个版本 ·
+      <a href={`/projects/${project.slug}`} class="ml-1 text-primary hover:underline">查看全部版本</a>
+    </footer>
+  </article>
+</Base>

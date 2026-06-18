@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="页面不存在 · 作品门户" path="/404">
+  <div class="py-16 text-center">
+    <p class="text-6xl font-bold text-muted-foreground">404</p>
+    <h1 class="mt-4 text-2xl font-semibold">页面走丢了</h1>
+    <p class="mt-2 text-sm text-muted-foreground">
+      你访问的页面不存在，或可能已被移动。
+    </p>
+    <div class="mt-6 flex justify-center gap-3 text-sm">
+      <a href="/" class="font-medium text-primary hover:underline">← 回到首页</a>
+      <span class="text-muted-foreground">·</span>
+      <a href="/about" class="text-muted-foreground hover:text-foreground">关于</a>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,48 @@
+# works-portal 部署编排
+# postgres 由 AiForKids 的 docker-compose（project=aiforkids）管理，
+# 容器名 aiforkids-postgres，运行在外部网络 aiforkids_aiforkids 上。
+# 本 compose 仅起 portal（静态 nginx）+ cms（Next standalone），不暴露宿主端口，
+# 通过同一外部网络被 aiforkids-nginx 反代访问。
+#
+# 使用：
+#   cd /Users/len/Projects/works-portal
+#   docker compose build
+#   docker compose up -d
+# 重建 portal（CMS 发布内容后）：
+#   docker compose up -d --build portal
+
+services:
+  portal:
+    build:
+      context: .
+      dockerfile: apps/portal/Dockerfile
+      # 构建期从 postgres 拉取已发布内容写入 dist/
+      args:
+        DATABASE_URL: postgresql://learningai:password@postgres:5432/learningai
+    container_name: works-portal
+    restart: unless-stopped
+    networks:
+      - aiforkids
+
+  cms:
+    build:
+      context: .
+      dockerfile: apps/cms/Dockerfile
+    container_name: works-cms
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://learningai:password@postgres:5432/learningai
+      PORTAL_JWT_SECRET: ${PORTAL_JWT_SECRET:-change-me-jwt-secret}
+      PORTAL_REBUILD_SECRET: ${PORTAL_REBUILD_SECRET:-change-me-rebuild-secret}
+      PORTAL_ADMIN_EMAIL: ${PORTAL_ADMIN_EMAIL:-admin@portal.local}
+      PORTAL_ADMIN_PASSWORD: ${PORTAL_ADMIN_PASSWORD:-change-me-admin-password}
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+    networks:
+      - aiforkids
+
+networks:
+  aiforkids:
+    external: true
+    name: aiforkids_aiforkids

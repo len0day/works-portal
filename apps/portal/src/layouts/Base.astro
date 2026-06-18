@@ -1,0 +1,65 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** 用于 OG/canonical 的绝对路径，如 /projects/wechatvideodownloader。 */
+  path?: string;
+  /** og:type，article 用于详情页。 */
+  type?: 'website' | 'article';
+}
+
+const {
+  title,
+  description = '作品门户 · 小程序与全栈应用的介绍、技术亮点、版本更新',
+  path = '/',
+  type = 'website',
+} = Astro.props;
+
+const year = new Date().getFullYear();
+const site = Astro.site ?? new URL('https://portal.aiedutalk.online');
+const canonical = new URL(path, site).href;
+---
+
+<!doctype html>
+<html lang="zh-CN" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={canonical} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="作品门户" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <title>{title}</title>
+  </head>
+  <body class="min-h-full">
+    <header class="border-b">
+      <nav class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+        <a href="/" class="font-bold tracking-tight">作品门户</a>
+        <div class="flex gap-6 text-sm text-muted-foreground">
+          <a href="/" class="hover:text-foreground">作品</a>
+          <a href="/about" class="hover:text-foreground">关于</a>
+        </div>
+      </nav>
+    </header>
+    <main class="mx-auto max-w-5xl px-6 py-12">
+      <slot />
+    </main>
+    <footer class="border-t py-8 text-center text-xs text-muted-foreground">
+      © {year} 作品门户
+    </footer>
+  </body>
+</html>
