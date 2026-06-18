@@ -22,6 +22,55 @@ const EMPTY: MediaForm = {
   status: 'draft',
 };
 
+/** 图片本地上传组件：上传后回调返回 /uploads/<uuid>.<ext> URL */
+function ImageUploader({
+  onUploaded,
+  disabled,
+}: {
+  onUploaded: (url: string) => void;
+  disabled?: boolean;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handle(file: File) {
+    setUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/media/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || '上传失败');
+      onUploaded(String(data.url));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-1">
+      <label className="inline-flex cursor-pointer items-center rounded border px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-50">
+        {uploading ? '上传中…' : '上传图片'}
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          disabled={uploading || disabled}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = ''; // 允许重复选择同一文件
+            if (f) handle(f);
+          }}
+        />
+      </label>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
+
 function MediaRow({
   item,
   onUpdated,
@@ -156,6 +205,19 @@ function MediaRow({
               placeholder="https://…"
             />
           </label>
+          {form.type === 'image' && (
+            <div className="flex items-center gap-3">
+              <ImageUploader onUploaded={(url) => setForm((f) => ({ ...f, url }))} />
+              {form.url && (
+                <img
+                  src={form.url}
+                  alt=""
+                  className="h-12 w-20 rounded border object-cover bg-muted"
+                  onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+                />
+              )}
+            </div>
+          )}
           {form.type === 'video' && (
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-muted-foreground">封面图 URL (thumbnail)</span>
@@ -288,6 +350,19 @@ function AddMediaForm({
           placeholder="https://…"
         />
       </label>
+      {form.type === 'image' && (
+        <div className="flex items-center gap-3">
+          <ImageUploader onUploaded={(url) => setForm((f) => ({ ...f, url }))} />
+          {form.url && (
+            <img
+              src={form.url}
+              alt=""
+              className="h-12 w-20 rounded border object-cover bg-muted"
+              onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+            />
+          )}
+        </div>
+      )}
       {form.type === 'video' && (
         <label className="block">
           <span className="mb-1 block text-xs font-medium text-muted-foreground">封面图 URL</span>

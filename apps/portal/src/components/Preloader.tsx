@@ -1,11 +1,20 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect } from 'react';
+import { useState, useLayoutEffect } from 'react';
 
 export const Preloader = () => {
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 2000);
+  // 首次访问播放 2s 并打 sessionStorage 标记；本会话内再次进入（整页刷新导航）
+  // 在 paint 前立即关闭，避免每次点击都重播动画
+  useLayoutEffect(() => {
+    if (sessionStorage.getItem('wp_preloaded')) {
+      setLoading(false);
+      return;
+    }
+    const t = setTimeout(() => {
+      setLoading(false);
+      sessionStorage.setItem('wp_preloaded', '1');
+    }, 2000);
     return () => clearTimeout(t);
   }, []);
 

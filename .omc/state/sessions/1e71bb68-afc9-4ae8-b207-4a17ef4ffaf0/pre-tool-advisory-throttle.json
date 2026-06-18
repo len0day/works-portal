@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "entries": {
+    "466399dafa2d20f60587180bad0a07358eb7f2bce724df0ff682f038ad33f5ad": {
+      "last_emitted_at_ms": 1781769564746,
+      "message": "Read multiple files in parallel when possible for faster analysis."
+    },
+    "79a93d4a2f8f50b95f852280616242fee1855dc99a3c75211917f55e72e95fae": {
+      "last_emitted_at_ms": 1781769500230,
+      "message": "Use parallel execution for independent tasks. Use run_in_background for long operations (npm install, builds, tests)."
+    },
+    "445ed27a3872b681d98190bae61ccb84954e1bc4e140df5370be958dee776b3a": {
+      "last_emitted_at_ms": 1781769091068,
+      "message": "Verify changes work after editing. Test functionality before marking complete."
+    },
+    "284b1563cc87e80968a65e6fa9f1cdd50d5f35d6445211215b6bb8b97b38c168": {
+      "last_emitted_at_ms": 1781769037806,
+      "message": "Spawning agent: oh-my-claudecode:executor (opus) | Task: 实现 9.4 图片上传"
+    }
+  },
+  "updated_at": "2026-06-18T07:59:24.746Z"
+}
