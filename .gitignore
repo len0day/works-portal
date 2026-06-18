@@ -19,3 +19,4 @@ apps/portal/src/data/*.json
 # CMS 用户上传的媒体图片不入库（仅保留目录占位）
 apps/cms/public/uploads/*
 !apps/cms/public/uploads/.gitkeep
+.omc/
