@@ -22,6 +22,7 @@ export const highlightCategory = pgEnum('portal_highlight_category', [
   'fix',
 ]);
 export const adminRole = pgEnum('portal_admin_role', ['admin', 'editor']);
+export const mediaType = pgEnum('portal_media_type', ['image', 'video']);
 
 // 时间戳工厂：UUIDBase 约定（带时区 + 自动 now/更新）
 const tz = { withTimezone: true, mode: 'date' } as const;
@@ -43,13 +44,13 @@ export const portal_admins = pgTable('portal_admins', {
 /** 项目 / 作品 */
 export const portal_projects = pgTable('portal_projects', {
   id: uuid('id').primaryKey().defaultRandom(),
-  slug: text('slug').notNull().unique(), // URL 友好，如 wechat-video-downloader
-  code: text('code').notNull().unique(), // 仓库代号，如 WeChatVideoDownloader
-  display_name: text('display_name').notNull(), // 展示名，如 云视仓
+  slug: text('slug').notNull().unique(),
+  code: text('code').notNull().unique(),
+  display_name: text('display_name').notNull(),
   display_name_en: text('display_name_en'),
-  tagline: text('tagline'), // 一句话简介
+  tagline: text('tagline'),
   form: projectForm('form').notNull().default('other'),
-  description: text('description'), // markdown
+  description: text('description'),
   description_en: text('description_en'),
   icon_url: text('icon_url'),
   cover_url: text('cover_url'),
@@ -60,8 +61,8 @@ export const portal_projects = pgTable('portal_projects', {
   sort_order: integer('sort_order').notNull().default(0),
   current_version: text('current_version'),
   released_at: timestamp('released_at', tz),
-  source_path: text('source_path'), // 本地仓库路径（解析器用）
-  raw_meta: jsonb('raw_meta'), // 解析器原始输出留底
+  source_path: text('source_path'),
+  raw_meta: jsonb('raw_meta'),
   created_at: createdAt(),
   updated_at: updatedAt(),
 });
@@ -74,8 +75,8 @@ export const portal_features = pgTable('portal_features', {
     .references(() => portal_projects.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   summary: text('summary'),
-  detail: text('detail'), // markdown
-  icon: text('icon'), // emoji 或 lucide 图标名
+  detail: text('detail'),
+  icon: text('icon'),
   sort_order: integer('sort_order').notNull().default(0),
   status: publishStatus('status').notNull().default('draft'),
   created_at: createdAt(),
@@ -89,9 +90,9 @@ export const portal_highlights = pgTable('portal_highlights', {
     .notNull()
     .references(() => portal_projects.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
-  metric_label: text('metric_label'), // 如 "内存占用"
-  metric_value: text('metric_value'), // 如 "↓75%"
-  body: text('body'), // markdown 技术说明
+  metric_label: text('metric_label'),
+  metric_value: text('metric_value'),
+  body: text('body'),
   category: highlightCategory('category').notNull().default('feature'),
   sort_order: integer('sort_order').notNull().default(0),
   status: publishStatus('status').notNull().default('draft'),
@@ -105,14 +106,30 @@ export const portal_releases = pgTable('portal_releases', {
   project_id: uuid('project_id')
     .notNull()
     .references(() => portal_projects.id, { onDelete: 'cascade' }),
-  version: text('version').notNull(), // 如 4.0.0
+  version: text('version').notNull(),
   title: text('title'),
   date: timestamp('date', tz),
-  body: text('body').notNull(), // markdown
-  source_file: text('source_file'), // 如 RELEASE_NOTES_3.2.2.md
+  body: text('body').notNull(),
+  source_file: text('source_file'),
   is_major: boolean('is_major').default(false),
   status: publishStatus('status').notNull().default('draft'),
   sort_order: integer('sort_order').notNull().default(0),
+  created_at: createdAt(),
+  updated_at: updatedAt(),
+});
+
+/** 项目媒体资源（图片 / 视频） */
+export const portal_media = pgTable('portal_media', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  project_id: uuid('project_id')
+    .notNull()
+    .references(() => portal_projects.id, { onDelete: 'cascade' }),
+  type: mediaType('type').notNull().default('image'),
+  url: text('url').notNull(),
+  thumbnail_url: text('thumbnail_url'),
+  caption: text('caption'),
+  sort_order: integer('sort_order').notNull().default(0),
+  status: publishStatus('status').notNull().default('draft'),
   created_at: createdAt(),
   updated_at: updatedAt(),
 });
@@ -126,13 +143,13 @@ export const portal_publish_drafts = pgTable('portal_publish_drafts', {
   release_id: uuid('release_id').references(() => portal_releases.id, { onDelete: 'set null' }),
   platform: platformEnum('platform').notNull(),
   title: text('title'),
-  body: text('body').notNull(), // 已格式化的平台文案
+  body: text('body').notNull(),
   tags: text('tags').array(),
   cover_url: text('cover_url'),
   deeplink: text('deeplink'),
   status: publishStatus('status').notNull().default('draft'),
-  published_at: timestamp('published_at', tz), // 人工确认发布的时间
-  generation_meta: jsonb('generation_meta'), // {template, llm}
+  published_at: timestamp('published_at', tz),
+  generation_meta: jsonb('generation_meta'),
   created_at: createdAt(),
   updated_at: updatedAt(),
 });
@@ -144,4 +161,6 @@ export type NewPortalProject = typeof portal_projects.$inferInsert;
 export type PortalFeature = typeof portal_features.$inferSelect;
 export type PortalHighlight = typeof portal_highlights.$inferSelect;
 export type PortalRelease = typeof portal_releases.$inferSelect;
+export type PortalMedia = typeof portal_media.$inferSelect;
+export type NewPortalMedia = typeof portal_media.$inferInsert;
 export type PortalPublishDraft = typeof portal_publish_drafts.$inferSelect;

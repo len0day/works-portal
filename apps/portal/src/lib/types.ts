@@ -59,3 +59,14 @@ export interface Release {
   sort_order: number;
   status: string;
 }
+
+export interface Media {
+  id: string;
+  project_id: string;
+  type: 'image' | 'video';
+  url: string;
+  thumbnail_url?: string | null;
+  caption?: string | null;
+  sort_order: number;
+  status: string;
+}

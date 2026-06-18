@@ -5,6 +5,7 @@ export type PublishStatus = 'draft' | 'published' | 'archived';
 export type Platform = 'xiaohongshu' | 'wechat_mp' | 'douyin';
 export type HighlightCategory = 'performance' | 'architecture' | 'i18n' | 'ai' | 'feature' | 'fix';
 export type AdminRole = 'admin' | 'editor';
+export type MediaType = 'image' | 'video';
 
 export interface PortalProject {
   id: string;
@@ -64,6 +65,17 @@ export interface PortalRelease {
   is_major?: boolean;
   status: PublishStatus;
   sort_order?: number;
+}
+
+export interface PortalMedia {
+  id?: string;
+  project_id?: string;
+  type: MediaType;
+  url: string;
+  thumbnail_url?: string | null;
+  caption?: string | null;
+  sort_order: number;
+  status: PublishStatus;
 }
 
 /** 解析器统一输出，CMS `/api/parse` 据此做幂等 upsert */

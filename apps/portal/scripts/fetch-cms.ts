@@ -11,26 +11,27 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = resolve(__dirname, '../src/data');
 
 const url = process.env.DATABASE_URL ?? 'postgresql://learningai:password@localhost:5433/learningai';
-const NAMES = ['projects', 'features', 'highlights', 'releases'] as const;
+const NAMES = ['projects', 'features', 'highlights', 'releases', 'media'] as const;
 
 async function main(): Promise<void> {
   mkdirSync(DATA_DIR, { recursive: true });
   const pool = new Pool({ connectionString: url, connectionTimeoutMillis: 3000 });
   try {
     const client = await pool.connect();
-    const [projects, features, highlights, releases] = await Promise.all([
+    const [projects, features, highlights, releases, media] = await Promise.all([
       client.query("SELECT * FROM portal_projects WHERE status='published' ORDER BY sort_order, created_at"),
       client.query("SELECT * FROM portal_features WHERE status='published' ORDER BY sort_order"),
       client.query("SELECT * FROM portal_highlights WHERE status='published' ORDER BY sort_order"),
       client.query("SELECT * FROM portal_releases WHERE status='published' ORDER BY date DESC NULLS LAST, sort_order"),
+      client.query("SELECT * FROM portal_media WHERE status='published' ORDER BY sort_order"),
     ]);
     client.release();
-    const data = { projects: projects.rows, features: features.rows, highlights: highlights.rows, releases: releases.rows };
+    const data = { projects: projects.rows, features: features.rows, highlights: highlights.rows, releases: releases.rows, media: media.rows };
     for (const name of NAMES) {
       writeFileSync(resolve(DATA_DIR, `${name}.json`), JSON.stringify(data[name], null, 2));
     }
     console.log(
-      `[fetch-cms] projects=${projects.rowCount} features=${features.rowCount} highlights=${highlights.rowCount} releases=${releases.rowCount}`,
+      `[fetch-cms] projects=${projects.rowCount} features=${features.rowCount} highlights=${highlights.rowCount} releases=${releases.rowCount} media=${media.rowCount}`,
     );
   } catch (e) {
     console.warn(`[fetch-cms] DB 不可用，降级为空数据:`, (e as Error).message);
