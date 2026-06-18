@@ -4,10 +4,9 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
-  /** 用于 OG/canonical 的绝对路径，如 /projects/wechatvideodownloader。 */
   path?: string;
-  /** og:type，article 用于详情页。 */
   type?: 'website' | 'article';
+  ogImage?: string;
 }
 
 const {
@@ -15,6 +14,7 @@ const {
   description = '作品门户 · 小程序与全栈应用的介绍、技术亮点、版本更新',
   path = '/',
   type = 'website',
+  ogImage,
 } = Astro.props;
 
 const year = new Date().getFullYear();
@@ -23,43 +23,59 @@ const canonical = new URL(path, site).href;
 ---
 
 <!doctype html>
-<html lang="zh-CN" class="h-full">
+<html lang="zh-CN" class="h-full dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title="作品门户 RSS" href="/rss.xml" />
 
-    <!-- Open Graph -->
     <meta property="og:type" content={type} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content="作品门户" />
+    {ogImage && <meta property="og:image" content={ogImage} />}
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
 
     <title>{title}</title>
   </head>
-  <body class="min-h-full">
-    <header class="border-b">
+  <body class="min-h-full bg-neutral-950 text-white">
+    <header class="border-b border-white/5 sticky top-0 z-50 bg-neutral-950/80 backdrop-blur-md">
       <nav class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <a href="/" class="font-bold tracking-tight">作品门户</a>
-        <div class="flex gap-6 text-sm text-muted-foreground">
-          <a href="/" class="hover:text-foreground">作品</a>
-          <a href="/about" class="hover:text-foreground">关于</a>
+        <a href="/" class="font-bold tracking-tighter text-lg">
+          DEV<span class="text-white/30">.</span>PORTAL
+        </a>
+        <div class="flex items-center gap-6 text-sm">
+          <a href="/" class="text-neutral-400 hover:text-white transition-colors">作品</a>
+          <a href="/about" class="text-neutral-400 hover:text-white transition-colors">关于</a>
+          <a
+            href="/rss.xml"
+            class="text-neutral-600 hover:text-neutral-400 transition-colors"
+            title="RSS 订阅"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+              <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20C4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/>
+            </svg>
+          </a>
         </div>
       </nav>
     </header>
+
     <main class="mx-auto max-w-5xl px-6 py-12">
       <slot />
     </main>
-    <footer class="border-t py-8 text-center text-xs text-muted-foreground">
-      © {year} 作品门户
+
+    <footer class="border-t border-white/5 py-10 text-center">
+      <p class="text-xs text-neutral-600 font-mono">
+        &copy; {year} DEV.PORTAL &mdash; 小程序与全栈应用展示
+      </p>
     </footer>
   </body>
 </html>

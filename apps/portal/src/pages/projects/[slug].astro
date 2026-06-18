@@ -4,14 +4,15 @@ import projectsData from '../../data/projects.json';
 import featuresData from '../../data/features.json';
 import highlightsData from '../../data/highlights.json';
 import releasesData from '../../data/releases.json';
-import type { Project, Feature, Highlight, Release } from '../../lib/types';
+import mediaData from '../../data/media.json';
+import type { Project, Feature, Highlight, Release, Media } from '../../lib/types';
 import { renderMarkdown, formatDate } from '../../lib/md';
 
 const featureList = featuresData as Feature[];
 const highlightList = highlightsData as Highlight[];
 const releaseList = releasesData as Release[];
+const mediaList = mediaData as Media[];
 
-// getStaticPaths 在 Astro 独立作用域执行，projects 须在函数内读取。
 export async function getStaticPaths() {
   const projectList = projectsData as Project[];
   return projectList.map((p) => ({
@@ -20,9 +21,7 @@ export async function getStaticPaths() {
   }));
 }
 
-interface Props {
-  project: Project;
-}
+interface Props { project: Project; }
 const { project } = Astro.props;
 
 const descHtml = renderMarkdown(project.description);
@@ -40,8 +39,10 @@ const projReleases = releaseList
     const db = b.date ? new Date(b.date).getTime() : 0;
     return db - da;
   });
+const projMedia = mediaList
+  .filter((m) => m.project_id === project.id)
+  .sort((a, b) => a.sort_order - b.sort_order);
 
-// 按 category 分组亮点
 const highlightGroups = projHighlights.reduce<Record<string, Highlight[]>>((acc, h) => {
   const key = h.category || '其他';
   (acc[key] ??= []).push(h);
@@ -49,13 +50,8 @@ const highlightGroups = projHighlights.reduce<Record<string, Highlight[]>>((acc,
 }, {});
 
 const categoryLabels: Record<string, string> = {
-  performance: '性能',
-  architecture: '架构',
-  i18n: '国际化',
-  ai: 'AI',
-  feature: '功能',
-  fix: '修复',
-  其他: '其他',
+  performance: '性能', architecture: '架构', i18n: '国际化',
+  ai: 'AI', feature: '功能', fix: '修复', '其他': '其他',
 };
 
 const links = [
@@ -69,92 +65,285 @@ const links = [
   description={project.tagline ?? `${project.display_name} 介绍、技术亮点与版本更新`}
   path={`/projects/${project.slug}`}
   type="article"
+  ogImage={project.cover_url ?? undefined}
 >
-  <a href="/" class="text-sm text-muted-foreground hover:text-foreground">← 返回作品列表</a>
+  <a href="/" class="inline-flex items-center gap-1.5 text-xs font-mono text-neutral-600 hover:text-white transition-colors mb-10">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    返回作品列表
+  </a>
 
-  <header class="mt-4 border-b pb-6">
-    <div class="flex flex-wrap items-baseline gap-3">
-      <h1 class="text-3xl font-bold tracking-tight">{project.display_name}</h1>
-      {project.current_version && (
-        <span class="rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-          当前版本 v{project.current_version}
-        </span>
+  <!-- Hero -->
+  <header class="mb-16">
+    <div class="flex flex-wrap items-baseline gap-3 mb-3">
+      {project.code && (
+        <span class="text-xs font-mono text-neutral-700 tracking-widest">{project.code}</span>
       )}
     </div>
-    {project.display_name_en && (
-      <p class="mt-1 text-sm text-muted-foreground">{project.display_name_en}</p>
-    )}
-    {project.tagline && <p class="mt-3 text-lg text-foreground/80">{project.tagline}</p>}
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-6">
+      <div class="flex-1">
+        <h1 class="text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9] mb-3">
+          {project.display_name}
+        </h1>
+        {project.display_name_en && project.display_name_en !== project.display_name && (
+          <p class="text-sm font-mono text-neutral-600 mb-3">{project.display_name_en}</p>
+        )}
+        {project.tagline && (
+          <p class="text-xl text-neutral-400 leading-relaxed max-w-2xl">{project.tagline}</p>
+        )}
+      </div>
+      <div class="flex flex-col items-start md:items-end gap-2 shrink-0">
+        {project.current_version && (
+          <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-mono text-neutral-400">
+            v{project.current_version}
+          </span>
+        )}
+        {project.released_at && (
+          <span class="text-xs text-neutral-700 font-mono">
+            {new Date(project.released_at).getFullYear()}
+          </span>
+        )}
+      </div>
+    </div>
+
     {stack.length > 0 && (
-      <div class="mt-4 flex flex-wrap gap-1.5">
+      <div class="flex flex-wrap gap-2 mb-6">
         {stack.map((t) => (
-          <span class="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">{t}</span>
+          <span class="rounded bg-white/5 border border-white/5 px-2.5 py-1 text-xs font-mono text-neutral-400">{t}</span>
         ))}
       </div>
     )}
+
     {links.length > 0 && (
-      <div class="mt-4 flex gap-3 text-sm">
+      <div class="flex gap-3">
         {links.map((l) => (
           <a
             href={l.href}
             target="_blank"
             rel="noopener noreferrer"
-            class="font-medium text-primary hover:underline"
+            class="inline-flex items-center gap-1.5 rounded border border-white/10 bg-white/5 px-4 py-2 text-sm font-mono text-neutral-300 hover:bg-white/10 hover:text-white transition-colors"
           >
-            {l.label} ↗
+            {l.label}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
         ))}
       </div>
     )}
   </header>
 
+  <!-- Cover image -->
+  {project.cover_url && (
+    <div class="mb-16 aspect-[16/9] w-full overflow-hidden rounded-xl bg-neutral-900">
+      <img
+        src={project.cover_url}
+        alt={project.display_name}
+        class="h-full w-full object-cover"
+        loading="eager"
+      />
+    </div>
+  )}
+
+  <!-- Description -->
   {descHtml && (
-    <section class="prose prose-sm mt-8 max-w-none">
-      <h2>项目介绍</h2>
+    <section class="mb-16 prose prose-sm prose-invert max-w-none">
+      <h2 class="text-2xl font-semibold mb-6 flex items-center gap-3">
+        <span class="h-px w-8 bg-white/20"></span>项目介绍
+      </h2>
       <div set:html={descHtml} />
     </section>
   )}
 
-  {projFeatures.length > 0 && (
-    <section class="mt-10">
-      <h2 class="text-xl font-semibold">功能特性</h2>
-      <ul class="mt-4 grid gap-3 sm:grid-cols-2">
-        {projFeatures.map((f) => (
-          <li class="rounded-lg border p-4">
-            <div class="flex items-baseline justify-between gap-2">
-              <h3 class="font-medium">{f.icon && <span class="mr-1">{f.icon}</span>}{f.title}</h3>
+  <!-- Media Gallery -->
+  {projMedia.length > 0 && (
+    <section class="mb-16">
+      <h2 class="text-2xl font-semibold mb-6 flex items-center gap-3">
+        <span class="h-px w-8 bg-white/20"></span>媒体展示
+      </h2>
+
+      <!-- Primary (first item) -->
+      <button
+        class="group relative mb-3 w-full overflow-hidden rounded-xl bg-neutral-900 aspect-video cursor-zoom-in block"
+        data-idx="0"
+        onclick="openLightbox(0)"
+      >
+        {projMedia[0].type === 'video' ? (
+          <>
+            <img
+              src={projMedia[0].thumbnail_url ?? projMedia[0].url}
+              alt={projMedia[0].caption ?? ''}
+              class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              loading="eager"
+            />
+            <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+              <div class="flex h-16 w-16 items-center justify-center rounded-full bg-white/15 backdrop-blur border border-white/20">
+                <svg viewBox="0 0 24 24" fill="white" class="h-6 w-6 ml-1"><polygon points="5,3 19,12 5,21"/></svg>
+              </div>
             </div>
-            {f.summary && <p class="mt-1 text-sm text-muted-foreground">{f.summary}</p>}
+          </>
+        ) : (
+          <img
+            src={projMedia[0].url}
+            alt={projMedia[0].caption ?? ''}
+            class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="eager"
+          />
+        )}
+        {projMedia[0].caption && (
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 px-4 py-3 opacity-0 transition-opacity group-hover:opacity-100">
+            <p class="text-sm text-white">{projMedia[0].caption}</p>
+          </div>
+        )}
+      </button>
+
+      <!-- Thumbnails -->
+      {projMedia.length > 1 && (
+        <div class="grid grid-cols-3 gap-3">
+          {projMedia.slice(1).map((m, i) => (
+            <button
+              class="group relative aspect-[4/3] overflow-hidden rounded-lg bg-neutral-900 cursor-zoom-in"
+              data-idx={i + 1}
+              onclick={`openLightbox(${i + 1})`}
+            >
+              <img
+                src={m.thumbnail_url ?? m.url}
+                alt={m.caption ?? ''}
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+              {m.type === 'video' && (
+                <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <svg viewBox="0 0 24 24" fill="white" class="h-5 w-5"><polygon points="5,3 19,12 5,21"/></svg>
+                </div>
+              )}
+              {m.caption && (
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 px-2 py-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                  <p class="text-xs text-white truncate">{m.caption}</p>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <!-- Lightbox -->
+      <dialog
+        id="media-lightbox"
+        class="fixed inset-0 m-0 h-full w-full max-h-none max-w-none bg-black/95 p-4 backdrop:bg-transparent"
+      >
+        <div class="flex h-full flex-col items-center justify-center">
+          <button
+            onclick="closeLightbox()"
+            class="absolute right-5 top-5 rounded-full p-2 text-white/50 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <button
+            onclick="prevMedia()"
+            id="lb-prev"
+            class="absolute left-4 top-1/2 -translate-y-1/2 rounded-full p-3 text-white/40 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-8 w-8"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div id="lb-content" class="max-w-4xl w-full"></div>
+          <p id="lb-caption" class="mt-4 text-sm text-neutral-400 text-center"></p>
+          <p id="lb-counter" class="mt-2 text-xs text-neutral-700 font-mono"></p>
+          <button
+            onclick="nextMedia()"
+            id="lb-next"
+            class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-3 text-white/40 hover:text-white transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-8 w-8"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </dialog>
+
+      <script define:vars={{ projMedia }}>
+        let currentIdx = 0;
+        const lb = document.getElementById('media-lightbox');
+        const lbContent = document.getElementById('lb-content');
+        const lbCaption = document.getElementById('lb-caption');
+        const lbCounter = document.getElementById('lb-counter');
+
+        function renderMedia(idx) {
+          const m = projMedia[idx];
+          if (!m) return;
+          if (m.type === 'video') {
+            lbContent.innerHTML = `<video src="${m.url}" controls autoplay class="w-full rounded-lg max-h-[70vh]" poster="${m.thumbnail_url ?? ''}"></video>`;
+          } else {
+            lbContent.innerHTML = `<img src="${m.url}" alt="${m.caption ?? ''}" class="w-full rounded-lg object-contain max-h-[70vh]" />`;
+          }
+          lbCaption.textContent = m.caption ?? '';
+          lbCounter.textContent = `${idx + 1} / ${projMedia.length}`;
+        }
+
+        window.openLightbox = function(idx) {
+          currentIdx = idx;
+          renderMedia(currentIdx);
+          lb.showModal();
+        };
+        window.closeLightbox = function() { lb.close(); };
+        window.prevMedia = function() {
+          currentIdx = (currentIdx - 1 + projMedia.length) % projMedia.length;
+          renderMedia(currentIdx);
+        };
+        window.nextMedia = function() {
+          currentIdx = (currentIdx + 1) % projMedia.length;
+          renderMedia(currentIdx);
+        };
+
+        lb.addEventListener('click', (e) => { if (e.target === lb) lb.close(); });
+        document.addEventListener('keydown', (e) => {
+          if (!lb.open) return;
+          if (e.key === 'Escape') lb.close();
+          if (e.key === 'ArrowLeft') window.prevMedia();
+          if (e.key === 'ArrowRight') window.nextMedia();
+        });
+      </script>
+    </section>
+  )}
+
+  <!-- Features -->
+  {projFeatures.length > 0 && (
+    <section class="mb-16">
+      <h2 class="text-2xl font-semibold mb-6 flex items-center gap-3">
+        <span class="h-px w-8 bg-white/20"></span>功能特性
+      </h2>
+      <ul class="grid gap-4 sm:grid-cols-2">
+        {projFeatures.map((f) => (
+          <li class="rounded-xl border border-white/5 bg-neutral-900/40 p-5 hover:border-white/10 hover:bg-neutral-900/70 transition-all">
+            {f.icon && <span class="text-2xl mb-3 block">{f.icon}</span>}
+            <h3 class="font-semibold mb-1.5">{f.title}</h3>
+            {f.summary && <p class="text-sm text-neutral-400 leading-relaxed">{f.summary}</p>}
           </li>
         ))}
       </ul>
     </section>
   )}
 
+  <!-- Highlights -->
   {projHighlights.length > 0 && (
-    <section class="mt-10">
-      <h2 class="text-xl font-semibold">技术亮点</h2>
-      <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <section class="mb-16">
+      <h2 class="text-2xl font-semibold mb-6 flex items-center gap-3">
+        <span class="h-px w-8 bg-white/20"></span>技术亮点
+      </h2>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Object.entries(highlightGroups).map(([cat, items]) => (
-          <div class="rounded-lg border p-4">
-            <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <div class="rounded-xl border border-white/5 bg-neutral-900/40 p-5">
+            <h3 class="mb-3 text-[10px] font-mono font-semibold uppercase tracking-widest text-neutral-600">
               {categoryLabels[cat] ?? cat}
             </h3>
-            <ul class="space-y-3">
+            <ul class="space-y-4">
               {items.map((h) => (
                 <li>
-                  <div class="font-medium">{h.title}</div>
+                  <div class="text-sm font-medium text-neutral-300">{h.title}</div>
                   {h.metric_value && (
-                    <div class="mt-1 text-2xl font-bold text-primary">
+                    <div class="mt-1 text-2xl font-bold font-mono text-white">
                       {h.metric_value}
                       {h.metric_label && (
-                        <span class="ml-1 text-xs font-normal text-muted-foreground">{h.metric_label}</span>
+                        <span class="ml-1 text-xs font-normal text-neutral-600">{h.metric_label}</span>
                       )}
                     </div>
                   )}
-                  {h.body && (
-                    <p class="mt-1 text-sm text-muted-foreground">{h.body}</p>
-                  )}
+                  {h.body && <p class="mt-1 text-xs text-neutral-500 leading-relaxed">{h.body}</p>}
                 </li>
               ))}
             </ul>
@@ -164,34 +353,49 @@ const links = [
     </section>
   )}
 
+  <!-- Releases -->
   {projReleases.length > 0 && (
-    <section class="mt-10">
-      <h2 class="text-xl font-semibold">版本时间线</h2>
-      <p class="mt-1 text-sm text-muted-foreground">
-        共 {projReleases.length} 个版本 ·
-        <a href={`/rss.xml`} class="ml-1 text-primary hover:underline">RSS 订阅</a>
+    <section class="mb-16">
+      <h2 class="text-2xl font-semibold mb-2 flex items-center gap-3">
+        <span class="h-px w-8 bg-white/20"></span>版本时间线
+      </h2>
+      <p class="mb-6 text-sm text-neutral-600">
+        共 {projReleases.length} 个版本 &middot;
+        <a href="/rss.xml" class="ml-1 text-neutral-500 hover:text-white transition-colors">RSS 订阅</a>
       </p>
-      <ul class="mt-4 space-y-2">
+      <div class="relative pl-5 border-l border-white/10 space-y-3">
         {projReleases.map((r) => (
-          <li>
-            <details class="group rounded-lg border p-3">
-              <summary class="flex cursor-pointer items-center justify-between gap-3 marker:content-['']">
-                <div class="flex items-baseline gap-2">
+          <div class="relative">
+            <span class={`absolute -left-[25px] top-2 h-2.5 w-2.5 rounded-full border-2 ${
+              r.is_major ? 'bg-white border-white' : 'bg-neutral-800 border-neutral-600'
+            }`}></span>
+            <details class="group rounded-lg border border-white/5 bg-neutral-900/30 p-4 hover:border-white/10 transition-colors">
+              <summary class="flex cursor-pointer items-center justify-between gap-3 list-none">
+                <div class="flex items-center gap-2">
                   <span class="font-mono text-sm font-semibold">{r.version}</span>
                   {r.is_major && (
-                    <span class="rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">MAJOR</span>
+                    <span class="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-mono text-white/60 border border-white/10">MAJOR</span>
                   )}
-                  {r.title && <span class="text-sm">{r.title}</span>}
+                  {r.title && <span class="text-sm text-neutral-400">{r.title}</span>}
                 </div>
-                <span class="text-xs text-muted-foreground">{formatDate(r.date)}</span>
+                <span class="text-xs text-neutral-700 font-mono shrink-0">{formatDate(r.date)}</span>
               </summary>
               {r.body && (
-                <div class="prose prose-sm mt-2 max-w-none" set:html={renderMarkdown(r.body)} />
+                <div class="prose prose-sm prose-invert mt-3 max-w-none" set:html={renderMarkdown(r.body)} />
               )}
             </details>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </section>
   )}
+
+  <div class="border-t border-white/10 pt-12 text-center">
+    <a href="/" class="group inline-flex flex-col items-center gap-3">
+      <span class="text-xs font-mono uppercase tracking-widest text-neutral-600">查看更多</span>
+      <span class="text-5xl md:text-7xl font-bold tracking-tighter text-neutral-700 group-hover:text-white transition-colors">
+        全部作品
+      </span>
+    </a>
+  </div>
 </Base>
