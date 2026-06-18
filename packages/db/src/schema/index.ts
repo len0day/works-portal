@@ -7,6 +7,7 @@ import {
   jsonb,
   boolean,
   pgEnum,
+  index,
 } from 'drizzle-orm/pg-core';
 
 // 枚举（均带 portal_ 前缀，避免与 AiForKids 同库冲突）
@@ -132,7 +133,10 @@ export const portal_media = pgTable('portal_media', {
   status: publishStatus('status').notNull().default('draft'),
   created_at: createdAt(),
   updated_at: updatedAt(),
-});
+}, (table) => ({
+  projectIdIdx: index('portal_media_project_id_idx').on(table.project_id),
+  sortOrderIdx: index('portal_media_sort_order_idx').on(table.sort_order),
+}));
 
 /** 多平台发布草稿（半自动分发） */
 export const portal_publish_drafts = pgTable('portal_publish_drafts', {

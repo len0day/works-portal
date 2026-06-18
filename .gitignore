@@ -14,3 +14,5 @@ coverage/
 drizzle/*.sql.bak
 # portal 构建产物数据（构建时生成）
 apps/portal/src/data/*.json
+# 显式跟踪 media.json 占位文件（clone 后可直接 build）
+!apps/portal/src/data/media.json

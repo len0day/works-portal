@@ -21,7 +21,7 @@ export async function GET(_req: Request, { params }: Ctx) {
     .limit(1);
   if (!project) return NextResponse.json({ error: '项目不存在' }, { status: 404 });
 
-  const [features, highlights, releases] = await Promise.all([
+  const [features, highlights, releases, media] = await Promise.all([
     db
       .select()
       .from(schema.portal_features)
@@ -37,9 +37,14 @@ export async function GET(_req: Request, { params }: Ctx) {
       .from(schema.portal_releases)
       .where(eq(schema.portal_releases.project_id, id))
       .orderBy(asc(schema.portal_releases.sort_order), desc(schema.portal_releases.date)),
+    db
+      .select()
+      .from(schema.portal_media)
+      .where(eq(schema.portal_media.project_id, id))
+      .orderBy(asc(schema.portal_media.sort_order), asc(schema.portal_media.created_at)),
   ]);
 
-  return NextResponse.json({ project, features, highlights, releases });
+  return NextResponse.json({ project, features, highlights, releases, media });
 }
 
 const FORM_VALUES = ['wechat_mp', 'fullstack', 'website', 'other'] as const;

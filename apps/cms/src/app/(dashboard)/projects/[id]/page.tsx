@@ -38,20 +38,18 @@ export default function ProjectEditPage() {
     setLoading(true);
     setError(null);
     try {
-      const [projectData, mediaData] = await Promise.all([
-        api<{
-          project: PortalProject;
-          features: PortalFeature[];
-          highlights: PortalHighlight[];
-          releases: PortalRelease[];
-        }>(`/api/projects/${id}`),
-        api<{ media: { length: number }[] }>(`/api/media?project_id=${id}`).catch(() => ({ media: [] })),
-      ]);
+      const projectData = await api<{
+        project: PortalProject;
+        features: PortalFeature[];
+        highlights: PortalHighlight[];
+        releases: PortalRelease[];
+        media: unknown[];
+      }>(`/api/projects/${id}`);
       setProject(projectData.project);
       setFeatures(projectData.features);
       setHighlights(projectData.highlights);
       setReleases(projectData.releases);
-      setMediaCount(mediaData.media.length);
+      setMediaCount(projectData.media.length);
     } catch (e) {
       setError((e as Error).message);
     } finally {

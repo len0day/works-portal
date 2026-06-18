@@ -28,7 +28,7 @@ works-portal/
 
 ---
 
-## Task 1 — 生成并提交 Drizzle 迁移文件
+## Task 1 — 生成并提交 Drizzle 迁移文件 [x]
 
 **优先级：P0（其他所有功能的前提）**
 
@@ -65,7 +65,7 @@ CREATE TABLE "portal_media" (
 
 ---
 
-## Task 2 — 修复 CMS media-tab.tsx 中的 JSX 语法错误
+## Task 2 — 修复 CMS media-tab.tsx 中的 JSX 语法错误 [x]
 
 **文件**：`apps/cms/src/app/(dashboard)/projects/[id]/media-tab.tsx`
 
@@ -97,7 +97,7 @@ CREATE TABLE "portal_media" (
 
 ---
 
-## Task 3 — 修复 Portal [slug].astro 中的 Astro JSX 兼容问题
+## Task 3 — 修复 Portal [slug].astro 中的 Astro JSX 兼容问题 [x]
 
 **文件**：`apps/portal/src/pages/projects/[slug].astro`
 
@@ -137,7 +137,7 @@ CREATE TABLE "portal_media" (
 
 ---
 
-## Task 4 — 确保 portal data 目录有 media.json 兜底文件
+## Task 4 — 确保 portal data 目录有 media.json 兜底文件 [x]
 
 **文件**：`apps/portal/src/data/media.json`（目前不存在）
 
@@ -157,7 +157,7 @@ CREATE TABLE "portal_media" (
 
 ---
 
-## Task 5 — 修复 index.astro 中的 Astro 三元表达式嵌套问题
+## Task 5 — 修复 index.astro 中的 Astro 三元表达式嵌套问题 [x] (构建已通过，无需修改)
 
 **文件**：`apps/portal/src/pages/index.astro`
 
@@ -184,7 +184,7 @@ CREATE TABLE "portal_media" (
 
 ---
 
-## Task 6 — 为 portal_media 添加数据库索引
+## Task 6 — 为 portal_media 添加数据库索引 [x]
 
 **文件**：`packages/db/src/schema/index.ts`
 
@@ -205,7 +205,7 @@ export const portal_media = pgTable('portal_media', {
 
 ---
 
-## Task 7 — CMS：为 projects API 的 GET /api/projects/:id 返回 media 数量
+## Task 7 — CMS：为 projects API 的 GET /api/projects/:id 返回 media 数量 [x]
 
 **文件**：`apps/cms/src/app/api/projects/[id]/route.ts`
 
@@ -228,7 +228,7 @@ db.select().from(schema.portal_media)
 
 ---
 
-## Task 8 — 端到端验证
+## Task 8 — 端到端验证 [x]
 
 按以下顺序验证所有功能正常：
 
