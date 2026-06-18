@@ -1,16 +1,210 @@
 ---
 import Base from '../layouts/Base.astro';
+import projectsData from '../data/projects.json';
+import type { Project } from '../lib/types';
+
+const projects = projectsData as Project[];
+const published = projects.length;
+
+const TECH_STACK = [
+  { cat: '前端', items: ['React', 'Next.js', 'Astro', 'Vue.js', 'Tailwind CSS', 'TypeScript'] },
+  { cat: '小程序', items: ['微信小程序', '云开发', 'Taro', 'uni-app'] },
+  { cat: '后端', items: ['Node.js', 'FastAPI', 'PostgreSQL', 'Redis', 'Drizzle ORM'] },
+  { cat: 'AI / 数据', items: ['OpenAI API', 'TensorFlow.js', 'ClickHouse', 'Kafka', 'D3.js'] },
+  { cat: '基础设施', items: ['Docker', 'Nginx', 'Cloudflare', 'Vercel', 'GitHub Actions'] },
+];
+
+const STATS = [
+  { value: `${published}+`, label: '上线项目' },
+  { value: '5+',            label: '年开发经验' },
+  { value: '100',           label: 'Lighthouse 均分' },
+  { value: '全栈',           label: '独立交付能力' },
+];
 ---
 
-<Base title="关于 · 作品门户">
-  <section class="prose max-w-none">
-    <h1>关于</h1>
-    <p>
-      这里集中展示我开发的小程序与全栈应用——每个作品的介绍、技术亮点与版本更新日志。
-      内容由后台 CMS 管理，并半自动分发到小红书、微信公众号、抖音。
-    </p>
-    <p class="text-muted-foreground">
-      首批作品：云视仓、亲子任务星球、WonderLearn。
-    </p>
+<Base title="关于 · 作品门户" path="/about">
+
+  <!-- ── Intro ── -->
+  <section class="intro">
+    <div class="label-row">
+      <span class="font-mono italic text-neutral-600 text-sm">00</span>
+      <span class="text-xs font-mono uppercase tracking-[0.3em] text-neutral-700">关于我</span>
+      <div class="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent"></div>
+    </div>
+
+    <h1 class="about-title">独立开发者<br /><em class="not-italic text-neutral-500" style="font-family: Georgia, serif;">全栈 &amp; 小程序</em></h1>
+
+    <div class="grid md:grid-cols-[2fr_1fr] gap-12 mt-12">
+      <div class="space-y-5 text-neutral-300 leading-relaxed">
+        <p>
+          专注于微信小程序与全栈 Web 应用开发，擅长从 0 到 1 独立交付产品——
+          需求分析、架构设计、前后端开发、部署上线一条龙。
+        </p>
+        <p>
+          热衷于将 AI 能力融入实际产品：语音识别、本地推理、内容生成自动化……
+          不追风口，只做能跑通的东西。
+        </p>
+        <p>
+          这个门户用来集中展示已上线的作品，配套 CMS 管理内容，并半自动分发到
+          小红书、微信公众号、抖音。
+        </p>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-2 gap-4 self-start">
+        {STATS.map(({ value, label }) => (
+          <div class="stat-card">
+            <div class="text-2xl font-bold font-mono text-white">{value}</div>
+            <div class="text-xs text-neutral-600 mt-1">{label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
   </section>
+
+  <!-- ── Tech Stack ── -->
+  <section class="tech-section">
+    <div class="label-row">
+      <span class="font-mono italic text-neutral-600 text-sm">01</span>
+      <span class="text-xs font-mono uppercase tracking-[0.3em] text-neutral-700">技术栈</span>
+      <div class="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent"></div>
+    </div>
+
+    <div class="mt-8 space-y-6">
+      {TECH_STACK.map(({ cat, items }) => (
+        <div class="tech-row">
+          <span class="tech-cat">{cat}</span>
+          <div class="flex flex-wrap gap-2">
+            {items.map((t) => (
+              <span class="tech-tag">{t}</span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- ── How I work ── -->
+  <section class="how-section">
+    <div class="label-row">
+      <span class="font-mono italic text-neutral-600 text-sm">02</span>
+      <span class="text-xs font-mono uppercase tracking-[0.3em] text-neutral-700">工作方式</span>
+      <div class="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent"></div>
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-4 mt-8">
+      {[
+        { n: '01', title: '需求优先', desc: '先搞清楚要解决什么问题，再动手。不为技术而技术。' },
+        { n: '02', title: '快速验证', desc: 'MVP 先跑通，数据说话，迭代比完美更重要。' },
+        { n: '03', title: '可持续交付', desc: '写得了的代码、跑得稳的部署、看得懂的文档。' },
+      ].map(({ n, title, desc }) => (
+        <div class="how-card">
+          <span class="font-mono text-xs text-neutral-700 mb-3 block">{n}</span>
+          <h3 class="font-semibold mb-2">{title}</h3>
+          <p class="text-sm text-neutral-500 leading-relaxed">{desc}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <div class="cta-section">
+    <p class="text-neutral-500 mb-6">看看我做过的东西，或者聊聊你的项目。</p>
+    <a href="/works" class="cta-btn">浏览全部作品 →</a>
+  </div>
+
 </Base>
+
+<style>
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .intro { animation: fade-up 0.7s ease both; }
+  .about-title {
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+    margin-top: 2.5rem;
+  }
+  .label-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .stat-card {
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    background: rgba(255,255,255,0.02);
+  }
+
+  /* Tech */
+  .tech-section {
+    margin-top: 5rem;
+    padding-top: 4rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .tech-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .tech-cat {
+    width: 5rem;
+    shrink: 0;
+    font-size: 0.7rem;
+    font-family: monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #525252;
+    padding-top: 0.3rem;
+  }
+  .tech-tag {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.7rem;
+    font-family: monospace;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 0.375rem;
+    color: #a3a3a3;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .tech-tag:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+
+  /* How */
+  .how-section {
+    margin-top: 4rem;
+    padding-top: 4rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .how-card {
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    background: rgba(255,255,255,0.02);
+  }
+
+  /* CTA */
+  .cta-section {
+    margin-top: 5rem;
+    padding-top: 4rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    text-align: center;
+  }
+  .cta-btn {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background: #fff;
+    color: #000;
+    border-radius: 0.5rem;
+    font-family: monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: background 0.2s;
+  }
+  .cta-btn:hover { background: #e5e5e5; }
+</style>

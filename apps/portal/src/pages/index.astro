@@ -4,8 +4,11 @@ import projectsData from '../data/projects.json';
 import highlightsData from '../data/highlights.json';
 import type { Project, Highlight } from '../lib/types';
 
-const projectList = projectsData as Project[];
+const allProjects  = projectsData  as Project[];
 const highlightList = highlightsData as Highlight[];
+
+// 首页只展示前 4 个精选
+const featured = allProjects.slice(0, 4);
 
 const topHighlights = (pid: string): Highlight[] =>
   highlightList
@@ -15,126 +18,231 @@ const topHighlights = (pid: string): Highlight[] =>
 
 const FORM_LABELS: Record<string, string> = {
   wechat_mp: '微信小程序',
-  fullstack: '全栈应用',
-  website: 'Web 应用',
-  other: '其他',
+  fullstack:  '全栈应用',
+  website:    'Web 应用',
+  other:      '其他',
 };
 ---
 
 <Base title="作品门户 · 首页" path="/">
-  <!-- Hero -->
-  <section class="mb-16">
-    <div class="flex items-center gap-4 mb-6">
-      <div class="flex items-baseline gap-2">
-        <span class="font-mono italic text-neutral-500 text-sm">01</span>
-        <span class="text-xs font-mono uppercase tracking-[0.3em] text-neutral-600">精选作品</span>
-      </div>
+
+  <!-- ── Hero ── -->
+  <section class="hero mb-24 pt-8">
+    <div class="label-row">
+      <span class="font-mono italic text-neutral-600 text-sm">01</span>
+      <span class="text-xs font-mono uppercase tracking-[0.3em] text-neutral-700">精选作品</span>
       <div class="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent"></div>
     </div>
-    <h1 class="text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9] mb-4">
-      我做的 <span class="text-neutral-500 italic font-serif">产品</span>
+
+    <h1 class="hero-title">
+      我做的<br />
+      <em class="not-italic text-neutral-500" style="font-family: Georgia, serif;">产品</em>
     </h1>
-    <p class="text-neutral-500 text-lg">小程序与全栈应用 &middot; 技术亮点 / 版本更新</p>
+
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-6">
+      <p class="text-neutral-500 text-lg leading-relaxed max-w-md">
+        小程序与全栈应用 &middot; 技术亮点 / 版本更新
+      </p>
+      <a
+        href="/works"
+        class="text-xs font-mono uppercase tracking-widest text-neutral-600 hover:text-white border-b border-white/15 pb-1.5 transition-colors self-start sm:self-auto whitespace-nowrap"
+      >
+        查看全部 {allProjects.length} 个项目 →
+      </a>
+    </div>
   </section>
 
+  <!-- ── Featured grid ── -->
   {
-    projectList.length === 0 ? (
-      <p class="rounded-lg border border-dashed border-white/10 bg-white/[0.02] p-12 text-center text-sm text-neutral-600">
-        尚未发布任何作品。请到后台 CMS 录入并发布。
-      </p>
-    ) : (
-      <div class="grid gap-6 md:grid-cols-2">
-        {projectList.map((p, i) => {
-          const hs = topHighlights(p.id);
-          const stack = (p.tech_stack ?? []).slice(0, 5);
-          const formLabel = FORM_LABELS[p.form ?? ''] ?? p.form;
-          return (
-            <a
-              href={`/projects/${p.slug}`}
-              class={`group relative flex flex-col overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 transition-all duration-300 hover:border-white/15 hover:bg-neutral-900/80 hover:shadow-xl hover:shadow-black/40 ${
-                i === 0 ? 'md:col-span-2' : ''
-              }`}
-            >
-              <!-- Cover -->
-              <div class={`overflow-hidden bg-neutral-900 ${
-                i === 0 ? 'aspect-[21/7]' : 'aspect-[4/3]'
-              }`}>
-                {p.cover_url ? (
-                  <img
-                    src={p.cover_url}
-                    alt={p.display_name}
-                    class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading={i === 0 ? 'eager' : 'lazy'}
-                  />
-                ) : (
-                  <div class="flex h-full items-center justify-center">
-                    <span class="font-mono text-sm text-neutral-700">{p.code}</span>
-                  </div>
-                )}
-                <!-- Gradient overlay -->
-                <div class="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent"></div>
-              </div>
+    featured.length === 0
+      ? (
+        <p class="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-16 text-center text-sm text-neutral-600">
+          尚未发布任何作品。请到后台 CMS 录入并发布。
+        </p>
+      )
+      : (
+        <div class="grid gap-6 md:grid-cols-2">
+          {featured.map((p, i) => {
+            const hs    = topHighlights(p.id);
+            const stack = (p.tech_stack ?? []).slice(0, 5);
+            const formLabel = FORM_LABELS[p.form ?? ''] ?? p.form;
+            return (
+              <a
+                href={`/projects/${p.slug}`}
+                class={`card group ${ i === 0 ? 'md:col-span-2' : '' }`}
+              >
+                <!-- Cover -->
+                <div class={`cover ${ i === 0 ? 'aspect-[21/7]' : 'aspect-[4/3]' }`}>
+                  {p.cover_url && (
+                    <img
+                      src={p.cover_url}
+                      alt={p.display_name}
+                      class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                    />
+                  )}
+                  {!p.cover_url && (
+                    <div class="flex h-full items-center justify-center">
+                      <span class="font-mono text-sm text-neutral-700">{p.code}</span>
+                    </div>
+                  )}
+                  <div class="overlay"></div>
+                </div>
 
-              <!-- Content -->
-              <div class="relative flex flex-1 flex-col p-6">
-                <div class="flex items-start justify-between gap-4 mb-3">
-                  <div>
-                    {formLabel && (
-                      <span class="text-[10px] font-mono text-neutral-600 uppercase tracking-widest block mb-1">
-                        {formLabel}
-                      </span>
-                    )}
-                    <h2 class="text-xl font-semibold tracking-tight group-hover:text-white transition-colors">
-                      {p.display_name}
-                    </h2>
-                  </div>
-                  <div class="flex items-center gap-2 shrink-0 mt-1">
+                <!-- Info -->
+                <div class="info">
+                  <div class="flex items-start justify-between gap-4 mb-3">
+                    <div>
+                      {formLabel && (
+                        <span class="text-[10px] font-mono text-neutral-600 uppercase tracking-widest block mb-1">
+                          {formLabel}
+                        </span>
+                      )}
+                      <h2 class="text-xl font-semibold tracking-tight">{p.display_name}</h2>
+                    </div>
                     {p.current_version && (
-                      <span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs font-mono text-neutral-400">
+                      <span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs font-mono text-neutral-500 shrink-0 mt-0.5">
                         v{p.current_version}
                       </span>
                     )}
                   </div>
-                </div>
 
-                {p.tagline && (
-                  <p class="mb-4 text-sm text-neutral-400 leading-relaxed line-clamp-2">{p.tagline}</p>
-                )}
+                  {p.tagline && (
+                    <p class="mb-4 text-sm text-neutral-400 leading-relaxed line-clamp-2">{p.tagline}</p>
+                  )}
 
-                {stack.length > 0 && (
-                  <div class="mb-4 flex flex-wrap gap-1.5">
-                    {stack.map((t) => (
-                      <span class="rounded bg-white/5 px-2 py-0.5 text-[11px] font-mono text-neutral-500 border border-white/5">
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                  {stack.length > 0 && (
+                    <div class="mb-4 flex flex-wrap gap-1.5">
+                      {stack.map((t) => (
+                        <span class="rounded bg-white/5 border border-white/5 px-2 py-0.5 text-[11px] font-mono text-neutral-500">{t}</span>
+                      ))}
+                    </div>
+                  )}
 
-                {hs.length > 0 && (
-                  <div class="mt-auto pt-4 border-t border-white/5 grid grid-cols-3 gap-3">
-                    {hs.map((h) => (
-                      <div>
-                        <div class="text-lg font-bold font-mono text-white leading-none">
-                          {h.metric_value ?? '—'}
+                  {hs.length > 0 && (
+                    <div class="mt-auto pt-4 border-t border-white/5 grid grid-cols-3 gap-3">
+                      {hs.map((h) => (
+                        <div>
+                          <div class="text-lg font-bold font-mono text-white leading-none">
+                            {h.metric_value ?? '—'}
+                          </div>
+                          {h.metric_label && (
+                            <div class="text-[10px] text-neutral-600 mt-0.5">{h.metric_label}</div>
+                          )}
+                          <div class="text-xs text-neutral-500 mt-0.5 truncate">{h.title}</div>
                         </div>
-                        {h.metric_label && (
-                          <div class="text-[10px] text-neutral-600 mt-0.5">{h.metric_label}</div>
-                        )}
-                        <div class="text-xs text-neutral-500 mt-0.5 truncate">{h.title}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
 
-                <span class="mt-4 text-xs font-mono text-neutral-600 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:text-white">
-                  查看详情 →
-                </span>
-              </div>
-            </a>
-          );
-        })}
-      </div>
-    )
+                  <span class="mt-4 block text-xs font-mono text-neutral-700 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:text-white">
+                    查看详情 →
+                  </span>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      )
   }
+
+  <!-- ── Services strip ── -->
+  <section class="services">
+    <div class="label-row mt-0">
+      <span class="font-mono italic text-neutral-600 text-sm">02</span>
+      <span class="text-xs font-mono uppercase tracking-[0.3em] text-neutral-700">我能做什么</span>
+      <div class="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent"></div>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+      {[
+        { icon: '📱', title: '微信小程序', desc: '从零到上线，性能优化、自定义组件、云开发一条龙' },
+        { icon: '⚡', title: '全栈 Web 应用', desc: 'React / Next.js + Node.js + PostgreSQL，快速交付 MVP' },
+        { icon: '🤖', title: 'AI 功能集成', desc: '接入 OpenAI / 本地模型，构建智能功能与自动化流程' },
+        { icon: '📊', title: '数据可视化', desc: 'ECharts / D3.js 大屏 & 看板，ClickHouse 实时分析' },
+        { icon: '🚀', title: '性能优化', desc: 'Lighthouse 100 分目标，首屏提速、包体积压缩' },
+        { icon: '🔧', title: '内容管理系统', desc: '定制 CMS + 多平台内容分发，降低运营成本' },
+      ].map(({ icon, title, desc }) => (
+        <div class="service-card">
+          <span class="text-2xl mb-3 block">{icon}</span>
+          <h3 class="font-semibold mb-1.5 text-sm">{title}</h3>
+          <p class="text-xs text-neutral-500 leading-relaxed">{desc}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
 </Base>
+
+<style>
+  /* Hero animations */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero { animation: fade-up 0.7s ease both; }
+  .hero-title {
+    font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 0.88;
+    margin-top: 2.5rem;
+    animation: fade-up 0.8s 0.1s ease both;
+  }
+  .label-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0;
+  }
+
+  /* Cards */
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.02);
+    transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  }
+  .card:hover {
+    border-color: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .cover {
+    position: relative;
+    overflow: hidden;
+    background: #171717;
+  }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10,10,10,0.7) 0%, transparent 50%);
+  }
+  .info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.5rem;
+  }
+
+  /* Services */
+  .services {
+    margin-top: 6rem;
+    padding-top: 4rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .service-card {
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    background: rgba(255,255,255,0.02);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .service-card:hover {
+    border-color: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+  }
+</style>
